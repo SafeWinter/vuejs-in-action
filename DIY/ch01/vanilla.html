@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vanilla JavaScript</title>
+    <style>
+        p, input {font-family: monospace;}
+        p {white-space: pre;}
+    </style>
+</head>
+<body>
+    <div id="myCalc">
+        <p>x <input class="calc-x-input" value="0"></p>
+        <p>y <input class="calc-y-input" value="0"></p>
+        <p>--------------------</p>
+        <p>= <span class="calc-result"></span></p>
+    </div>
+    <script type="text/javascript">
+        class Calc {
+            constructor(xInput, yInput, output) {
+                this.xInput = xInput;
+                this.yInput = yInput;
+                this.output = output;
+            }
+            render(result) {
+                this.output.innerText = String(result);
+            }
+            static xName = 'xInput';
+            static yName = 'yInput';
+        }
+
+        class CalcValue {
+            constructor(calc, x, y) {
+                this.calc = calc;
+                this.x = x;
+                this.y = y;
+                this.result = x + y;
+            }
+            copyWith(name, value) {
+                const number = parseFloat(value);
+                if (isNaN(number) || !isFinite(number))
+                    return this;
+                if (name === Calc.xName)
+                    return new CalcValue(this.calc, number, this.y);
+                if (name === Calc.yName)
+                    return new CalcValue(this.calc, this.x, number);
+                return this;
+            }
+            render() {
+                this.calc.render(this.result);
+            }
+        }
+
+        const initCalc = elem => {
+            const calc = new Calc(
+                elem.querySelector('.calc-x-input'), 
+                elem.querySelector('.calc-y-input'),
+                elem.querySelector('.calc-result')
+            );
+            
+            let lastValues = new CalcValue(
+                calc, 
+                parseFloat(calc.xInput.value), 
+                parseFloat(calc.yInput.value)
+            );
+            
+            const handleCalcEvent = ({target: elem}) => {
+                let newValues = lastValues;
+                switch(elem) {
+                    case calc.xInput:
+                        newValues = lastValues.copyWith(Calc.xName, elem.value);
+                        break;
+                    case calc.yInput:
+                        newValues = lastValues.copyWith(Calc.yName, elem.value);
+                        break;
+                }
+                if(newValues !== lastValues) {
+                    lastValues = newValues;
+                    lastValues.render();
+                }
+            };
+
+            elem.addEventListener('keyup', handleCalcEvent, false);
+
+            return lastValues;
+        };
+
+        window.addEventListener('load', () => {
+            const calc = initCalc(document.querySelector('#myCalc'));
+            calc.render();
+        }, false);
+    </script>
+</body>
+</html>
